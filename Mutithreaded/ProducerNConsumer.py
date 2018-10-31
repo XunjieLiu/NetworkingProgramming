@@ -1,5 +1,6 @@
 import threading
 import time
+import queue
 
 '''
 使用threading，只需要从threading.Thread继承，并重写__init__()和run方()法
@@ -19,8 +20,8 @@ CPU此时是完全闲置的，这种情况下采用多线程较好
 
 '''
 
-queue = [] # python里面的List是线程安全的，所以不需要像Java一样显式地去加锁
-# 我服气的
+queue = queue.Queue(10) # Queue是一个线程安全的容器
+
 
 class Producer(threading.Thread):
 	# 构造方法
@@ -30,13 +31,9 @@ class Producer(threading.Thread):
 
 	def run(self):
 		while 1:
-			queue.append(1)
+			queue.put(0)
 			print("Producer %s creates a product" % self.name)
-			time.sleep(1)
-
-			if len(queue) > 20:
-				print("Queue is full! ")
-				time.sleep(5)
+			print("Producer %s put a product into queue" % self.name)
 
 class Consumer(threading.Thread):
 	def __init__(self, name):
@@ -45,23 +42,16 @@ class Consumer(threading.Thread):
 
 	def run(self):
 		while 1:
-			try:
-				queue.pop()
-				print("Consumer %s get a product" % self.name)
-				time.sleep(2)
-			except:
-				print("Queue is empty! ")
-				time.sleep(2)
-				print("Consumer %s sleep for 2 seconds" % self.name)
+			queue.get()
+			print("Consumer %s get a product" % self.name)
 
 def test():
-	p1 = Producer("Kevin Durant")
-	p2 = Producer("Stephen Curry")
+	p1 = Producer("Producer 1")
 	c1 = Consumer("Consumer 1")
 
 	p1.start()
-	p2.start()
 	c1.start()
+
 
 if __name__ == '__main__':
 	test()
